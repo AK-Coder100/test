@@ -1,48 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebUSB Example</title>
 </head>
+
 <body>
 
-<script>
-  document.addEventListener('DOMContentLoaded', (event) => {
-    const connectButton = document.getElementById('connectButton');
-let device = ''
-    connectButton.addEventListener('click', async () => {
-      try {
-        console.log(1)
-        device = await navigator.usb.requestDevice({ filters: [] });
-        console.log(2)
-
-        // Open the device and perform operations
-        await device.open();
-        console.log(3)
-        await device.selectConfiguration(1); // Choose the first configuration
-        console.log(4)
-        await device.claimInterface(0); // Claim the first interface
-        console.log(5)
-
-        // Example: Sending a control transfer
-        const result = await device.controlTransferOut({
-          requestType: 'vendor',
-          recipient: 'device',
-          request: 0x01,
-          value: 0x02,
-          index: 0x03
-        });
-
-        console.log('Control transfer result:', result);
-      } catch (error) {
-        console.error('Error connecting to USB device:', error);
+  <script>
+    function autoReadSMS() {
+      const codeCont = document.getElementById('code')
+      // used AbortController with setTimeout so that WebOTP API (Autoread sms) will get disabled after 1min
+      console.log("1 enter")
+      console.log(codeCont)
+      const signal = new AbortController();
+      setTimeout(() => {
+        signal.abort();
+      }, 1 * 60 * 1000);
+      async function main() {
+        if ('OTPCredential' in window) {
+          console.log("2 enter", 'OTPCredential' in window)
+          codeCont.innerHTML = `"otp in window", ${'OTPCredential' in window}`
+          try {
+            if (navigator.credentials) {
+              console.log("3 enter")
+              codeCont.innerHTML = `${navigator.credentials}`
+              try {
+                await navigator.credentials
+                  .get({ abort: signal, otp: { transport: ['sms'] } })
+                  .then(content => {
+                    if (content) {
+                      alert(content)
+                    }
+                  })
+                  .catch(e => {
+                    console.log(e)
+                    codeCont.innerHTML = e
+                  });
+                console.log("4 enter")
+              }
+              catch (e) {
+                return;
+              }
+            }
+          }
+          catch (err) {
+            console.log(err);
+          }
+        }
       }
-    });
-  });
-</script>
+      main();
+    }
+   
+    setTimeout(() => {
+      autoReadSMS()
+      }, 1000);
+  </script>
 
-<button id="connectButton">Connect to USB Device</button>
+  <button id="connectButton">Connect to USB Device</button>
+  <div id="code">
+
+  </div>
 
 </body>
+
 </html>
