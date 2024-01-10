@@ -15,10 +15,6 @@
       // used AbortController with setTimeout so that WebOTP API (Autoread sms) will get disabled after 1min
       console.log("1 enter")
       console.log(codeCont)
-      const signal = new AbortController();
-      setTimeout(() => {
-        signal.abort();
-      }, 1 * 60 * 1000);
       async function main() {
         if ('OTPCredential' in window) {
           console.log("2 enter", 'OTPCredential' in window)
@@ -29,10 +25,11 @@
               codeCont.innerHTML = `${navigator.credentials}`
               try {
                 await navigator.credentials
-                  .get({ abort: signal, otp: { transport: ['sms'] } })
+                  .get({ otp: { transport: ['sms'] } })
                   .then(content => {
+                    codeCont.innerHTML = `${content}`
                     if (content) {
-                      alert(content)
+                      alert(content.code)
                     }
                   })
                   .catch(e => {
@@ -53,13 +50,12 @@
       }
       main();
     }
-   
+
     setTimeout(() => {
       autoReadSMS()
-      }, 1000);
+    }, 1000);
   </script>
 
-  <button id="connectButton">Connect to USB Device</button>
   <div id="code">
 
   </div>
